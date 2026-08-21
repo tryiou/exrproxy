@@ -6,25 +6,19 @@
 # docker build --build-arg cores=8 --build-arg workerconns=2048 -t blocknetdx/exrproxy:latest .
 # docker run -d --name xrproxy -p 80:80 blocknetdx/exrproxy:latest
 
-FROM nginx:1.21.6
-
-RUN apt update \
-  && apt install -y --no-install-recommends \
-     software-properties-common \
-     ca-certificates \
-     wget curl git python3 vim \
-  && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+FROM nginx:stable-bookworm
 
 COPY requirements.txt /opt/requirements.txt
 
-RUN apt update \
-  && apt install -y --no-install-recommends \
-     supervisor build-essential libssl-dev \
-     python3-dev python3-pip python3-setuptools \
-     postgresql \
-  && pip3 install psycopg2-binary \
-  && pip3 install -r /opt/requirements.txt \
-  && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+ENV PIP_BREAK_SYSTEM_PACKAGES=1
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+      ca-certificates wget curl git vim \
+      supervisor build-essential libssl-dev \
+      python3-dev python3-pip python3-setuptools \
+ && pip3 install --no-cache-dir -r /opt/requirements.txt \
+ && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Setup uwsgi dir and bitcoin lib
 RUN mkdir -p /opt/uwsgi/conf
@@ -111,6 +105,7 @@ http {                                                                          
 \n" > /etc/nginx/nginx.conf
 
 # uwsgi params
+RUN python3 -c 'p="/etc/nginx/nginx.conf"; s=open(p).read(); n="        location ~ ^/xrs?/.*$ {"; s=s.replace(n, "        location = /healthz { return 200 ok; }\n\n"+n, 1); open(p,"w").write(s)'
 RUN echo "uwsgi_param  QUERY_STRING       \$query_string;                          \n\
 uwsgi_param  REQUEST_METHOD     \$request_method;                                  \n\
 uwsgi_param  CONTENT_TYPE       \$content_type;                                    \n\
@@ -196,9 +191,12 @@ COPY bitcoin /opt/uwsgi/bitcoin/
 COPY exr /opt/uwsgi/exr/
 COPY plugins /opt/uwsgi/plugins/
 
-VOLUME ["/opt/uwsgi/conf", "/etc/nginx"]
+VOLUME ["/opt/uwsgi/conf"]
 
 EXPOSE 80 443
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
+  CMD curl -f http://127.0.0.1/healthz || exit 1
 
 ENTRYPOINT ["supervisord"]
 CMD ["-c", "/etc/supervisord.conf"]
