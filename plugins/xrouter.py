@@ -346,7 +346,15 @@ def call_xrfunc(namesp: str, token: str, xrfunc: str, env: dict):
         if l_xr_method == 'xrshowconfigs':
             pass
         if l_xr_method == 'xrgetblock':
-            pass
+            verbosity = params[1] if len(params) > 1 else 1
+            if isinstance(verbosity, bool):
+                verbosity = 0 if verbosity is False else 1
+            else:
+                try:
+                    verbosity = int(verbosity)
+                except (TypeError, ValueError):
+                    verbosity = 1
+            params = [params[0], verbosity]
         if l_xr_method == 'xrgetblocks' or l_xr_method == 'xrgettransactions': # iterate over all ids
             response = []
             for b_id in params:
@@ -428,7 +436,7 @@ def call_url(xrfunc: str, params: any, env: dict):
 
 
 def parse_result(res: any):
-    if 'result' in res and res['result']:
+    if 'result' in res and res['result'] is not None:
         return res['result']
     else:
         return res
@@ -473,7 +481,7 @@ def xr_to_rpc(token: str, xr_func: str):
         if l_xr_method == 'xrgetblocks': return 'getblock'
         if l_xr_method == 'xrgettransaction': return 'getrawtransaction'
         if l_xr_method == 'xrgettransactions': return 'getrawtransaction'
-        if l_xr_method == 'xrshowconfigs': return 'xrshowconfigs'
+        if l_xr_method == 'xrshowconfigs': return 'xrshowconfigs' if l_token == 'block' else ''
         if l_xr_method == 'xrsendtransaction': return 'sendrawtransaction'
 
     return ''
