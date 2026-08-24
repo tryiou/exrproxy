@@ -143,6 +143,24 @@ set-ph = URL_LTCGetBlockCount_HOSTIP=172.17.0.2
 set-ph = URL_LTCGetBlockCount_PORT=9332
 ``` 
 
+### Rate limit
+
+Format: `XR_RATE_LIMIT`
+
+Rate limit applied to all XRouter/XQuery endpoints. Accepts any
+[limits](https://limits.readthedocs.io/) rate string, e.g. `"10/second"`,
+`"5 per minute"`, or semicolon-separated windows; zero-amount windows are
+rejected as invalid. Unconfigured deployments default to
+`50/minute;3000/hour;72000/day`. Invalid values log a warning and fall back
+to the default.
+
+```
+set-ph = XR_RATE_LIMIT=50/minute;3000/hour;72000/day
+```
+
+The same option can be provided as the `XR_RATE_LIMIT` environment variable
+(e.g. for docker-compose deployments).
+
 ## NGINX configs for XCloud Plugins
 
 An nginx config file can be used to expose an XCloud plugin through the XRouter Proxy server. This is an alternative setup and will bypass the built in python handler. The tradeoff is that the proxy will not sign return packets, however, you have full control of handling the request without any middleware. By default the XRouter protocol expects plugins to exist at the endpoint `/xrs/PluginName`.

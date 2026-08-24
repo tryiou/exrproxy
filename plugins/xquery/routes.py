@@ -11,10 +11,10 @@ import requests
 from flask import Blueprint, Response, g, jsonify, request
 from plugins.projects.middleware import authenticate
 from plugins.projects.util.request_handler import RequestHandler
-from plugins import limiter
+from plugins import XR_RATE_LIMIT, limiter
 
 app = Blueprint('xquery', __name__)
-limiter.limit("50/minute;3000/hour;72000/day")(app)
+limiter.limit(XR_RATE_LIMIT)(app)
 req_handler = RequestHandler()
 
 @app.errorhandler(400)

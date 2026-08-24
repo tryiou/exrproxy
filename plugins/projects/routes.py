@@ -11,12 +11,12 @@ import requests
 from flask import Blueprint, jsonify, request, g
 from plugins.projects.middleware import half_authenticate
 from plugins.projects.util.request_handler import RequestHandler
-from plugins import limiter
+from plugins import XR_RATE_LIMIT, limiter
 
 quote_valid_hours = 1 # number of hours for which price quote given to client is valid; afterwhich, payments get half API calls
 
 app = Blueprint('projects', __name__)
-limiter.limit("50/minute;3000/hour;72000/day")(app)
+limiter.limit(XR_RATE_LIMIT)(app)
 req_handler = RequestHandler()
 
 

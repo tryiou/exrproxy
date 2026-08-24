@@ -160,6 +160,10 @@ set-ph = SERVICENODE_PRIVKEY=                                                   
 # EXR plugins                                                                      \n\
 #set-ph = PLUGINS=projects                                                         \n\
                                                                                    \n\
+# Rate limit applied to all XRouter/XQuery endpoints (default:                    \n\
+# 50/minute;3000/hour;72000/day)                                                   \n\
+#set-ph = XR_RATE_LIMIT=50/minute;3000/hour;72000/day                              \n\
+                                                                                   \n\
 # Optionally handle XRouter payments                                               \n\
 #set-ph = HANDLE_PAYMENTS=true                                                     \n\
 #set-ph = HANDLE_PAYMENTS_RPC_HOSTIP=192.168.1.20                                  \n\

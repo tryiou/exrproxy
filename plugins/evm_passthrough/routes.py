@@ -17,10 +17,10 @@ from plugins.evm_passthrough import util
 from plugins.projects.database.models import db_session, select, Project
 from plugins.projects.middleware import authenticate
 from plugins.projects.util.request_handler import RequestHandler
-from plugins import limiter
+from plugins import XR_RATE_LIMIT, limiter
 
 app = Blueprint('evm_passthrough', __name__)
-limiter.limit("50/minute;3000/hour;72000/day")(app)
+limiter.limit(XR_RATE_LIMIT)(app)
 req_handler = RequestHandler()
 
 
