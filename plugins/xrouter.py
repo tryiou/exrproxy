@@ -91,6 +91,14 @@ def call_xrfunc(namesp: str, token: str, xrfunc: str, env: dict):
             return call_url(xrfunc, params, env)
 
     if not rpchost or not rpcport or not rpcuser or not rpcpass or (is_xrouter_plugin and not rpcmethod):
+        if is_xrouter_plugin and 'RPC_' + token + '_METHOD' not in uwsgi.opt:
+            # The proxy has no method gate configured for this service —
+            # that is an unsupported call (1031), not a proxy misconfiguration.
+            # Keeps "unknown service" distinct from "broken deployment".
+            return {
+                'code': 1031,
+                'error': 'Unsupported call ' + xrfunc + ' for token ' + token
+            }
         return {
             'code': 1002,
             'error': 'Internal Server Error: bad proxy configuration for token ' + token
@@ -394,7 +402,11 @@ def call_xrfunc(namesp: str, token: str, xrfunc: str, env: dict):
             if not is_xrouter_plugin:
                     response = parse_result(json.loads(res.content))
             else:
-                    response = json.loads(res.content)
+                    # Relay the upstream body verbatim. Parsing and
+                    # re-serializing here mangles number fidelity (e.g. fees
+                    # re-rendered as 1e-05) — send_response passes strings
+                    # through untouched.
+                    return res.content.decode('utf8')
             return response
         except ValueError:
             return res.content.decode('utf8')  # return raw string if json decode fails
