@@ -58,7 +58,10 @@ def handle_request(project_id, path=None):
         host = 'http://'+host_ip+':'+host_port+'/v1/graphql'
         headers = {'content-type': 'application/json'}
         if path in ['indexer','indexer/']:
-            response = requests.post(host, headers=headers, json=request.get_json(), timeout=300)
+            req_data = request.get_json(silent=True)
+            if not req_data:
+                return bad_request_error('missing parameters')
+            response = requests.post(host, headers=headers, json=req_data, timeout=300)
             resp = json.dumps(response.json())
             header = response.headers
             header['Content-Type']='application/json'

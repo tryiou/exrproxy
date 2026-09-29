@@ -91,5 +91,27 @@ class ModuleWiringTest(unittest.TestCase):
         self.assertEqual(result.stdout.strip(), '6000/minute')
 
 
+class EnforcementIntegrationTest(unittest.TestCase):
+    def test_limiter_enforces_and_returns_429(self):
+        # End-to-end proof that the pinned flask-limiter/limits pairing
+        # actually enforces: N successes then 429s. Config plumbing tests
+        # above cannot catch an enforcement regression between the two
+        # libraries; this can.
+        from flask import Flask
+        from plugins import limiter
+
+        app = Flask(__name__)
+        limiter.init_app(app)
+
+        @app.route('/limited')
+        @limiter.limit('2/minute')
+        def limited():
+            return 'ok'
+
+        with app.test_client() as client:
+            codes = [client.get('/limited').status_code for _ in range(5)]
+        self.assertEqual(codes, [200, 200, 429, 429, 429])
+
+
 if __name__ == '__main__':
     unittest.main()

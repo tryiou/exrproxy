@@ -64,7 +64,7 @@ def handle_request(evm, project_id, path=None):
     batch = False
 
     try:
-        req_data = request.get_json()
+        req_data = request.get_json(silent=True)
         if not req_data:
             return bad_request_error('missing parameters')
 
